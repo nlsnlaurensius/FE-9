@@ -57,7 +57,7 @@ function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="max-w-sm md:max-w-5xl w-full rounded-2xl bg-white dark:bg-gray-800 rounded-lg shadow-xl dark:shadow-lg transition-colors duration-300 text-gray-900 dark:text-white flex flex-col md:flex-row p-0 overflow-hidden min-h-[34rem]">
+      <div className="max-w-sm md:max-w-3xl w-full rounded-2xl bg-white dark:bg-gray-800 rounded-lg shadow-xl dark:shadow-lg transition-colors duration-300 text-gray-900 dark:text-white flex flex-col md:flex-row p-0 overflow-hidden min-h-[34rem]">
 
         <div className="w-full md:w-1/2 bg-gray-200 dark:bg-gray-700 flex-shrink-0 overflow-hidden">
           <img src={loginImage} alt="Login Illustration" className="w-full h-full object-cover" />
