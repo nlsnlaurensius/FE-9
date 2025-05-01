@@ -56,8 +56,8 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="max-w-sm md:max-w-4xl w-full rounded-2xl bg-white dark:bg-gray-800 rounded-lg shadow-xl dark:shadow-lg transition-colors duration-300 text-gray-900 dark:text-white flex flex-col md:flex-row p-0 overflow-hidden min-h-[34rem]">
+    <div className="flex items-center justify-center p-4">
+      <div className="max-w-sm md:max-w-4xl w-full rounded-2xl bg-white dark:bg-gray-800 rounded-lg shadow-xl dark:shadow-lg transition-colors duration-300 text-gray-900 dark:text-white flex flex-col md:flex-row p-0 overflow-hidden min-h-[28rem]">
 
         <div className="w-full md:w-1/2 bg-gray-200 dark:bg-gray-700 flex-shrink-0 overflow-hidden">
           <img src={loginImage} alt="Login Illustration" className="w-full h-full object-cover" />
@@ -106,7 +106,7 @@ function LoginPage() {
                   <div className="flex items-center justify-between">
                     <button
                       type="submit"
-                      className="rounded-full bg-gradient-to-br from-blue-800 via-blue-500 to-blue-700 hover:from-blue-900 hover:via-blue-700 hover:to-blue-900 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300 w-full dark:bg-blue-700 dark:hover:bg-blue-800"
+                      className="rounded-full bg-gradient-to-br from-blue-800 via-blue-500 to-blue-700 hover:from-blue-900 hover:via-blue-700 hover:to-blue-900 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300 w-full "
                     >
                       {isRegister ? 'Daftar' : 'Masuk'}
                     </button>
