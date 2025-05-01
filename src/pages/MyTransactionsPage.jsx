@@ -1,21 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { getAllTransactions } from '../api';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 
 function MyTransactionsPage() {
   const [transactions, setTransactions] = useState([]);
   const [message, setMessage] = useState('');
-  const [messageType, setMessageType] = useState(''); // 'success' or 'error'
+  const [messageType, setMessageType] = useState('');
   const navigate = useNavigate();
-  // Get logged-in user from localStorage
   const user = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
     if (!user || !user.id) {
-        // Should be caught by PrivateRoute, but good practice to check
         setMessage('User not logged in. Redirecting...');
         setMessageType('error');
-        navigate('/');
+        navigate('/login');
         return;
     }
 
@@ -23,9 +21,7 @@ function MyTransactionsPage() {
       try {
         const response = await getAllTransactions();
         if (response.data.success) {
-            // Filter transactions for the current user
             const userTransactions = response.data.payload.filter(t => t.user_id === user.id);
-            // Sort by date, newest first
             userTransactions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             setTransactions(userTransactions);
         } else {
@@ -37,28 +33,34 @@ function MyTransactionsPage() {
         console.error("API Error:", error.response || error);
         setMessage(errorMessage);
         setMessageType('error');
+        if (error.response && error.response.status === 401) {
+             localStorage.removeItem('token');
+             localStorage.removeItem('user');
+             navigate('/login');
+        }
       }
     };
     fetchTransactions();
-  }, [navigate, user]); // Depend on navigate and user
+  }, [navigate, user]);
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-6">My Transactions</h2>
-      {message && <p className={`mb-4 ${messageType === 'success' ? 'text-green-500' : 'text-red-500'}`}>{message}</p>}
+    <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-lg shadow-md dark:shadow-lg transition-colors duration-300">
+      <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">My Transactions</h2>
+      {message && <p className={`mb-4 ${messageType === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{message}</p>}
+
       {transactions.length > 0 ? (
          transactions.map(t => (
-            <div key={t.id} className="bg-gray-50 p-4 rounded-lg shadow-sm mb-4 border border-gray-200"> {/* Transaction Item Styling */}
-                <p className="text-sm text-gray-700 mb-1"><strong>Transaction ID:</strong> {t.id}</p>
-                <p className="text-sm text-gray-700 mb-1"><strong>Item:</strong> {t.item.name}</p>
-                <p className="text-sm text-gray-700 mb-1"><strong>Quantity:</strong> {t.quantity}</p>
-                <p className="text-sm text-gray-700 mb-1"><strong>Total:</strong> ${parseFloat(t.total).toFixed(2)}</p> {/* Format total */}
-                <p className="text-sm text-gray-700 mb-1"><strong>Status:</strong> <span className={`font-semibold ${t.status === 'paid' ? 'text-green-600' : 'text-yellow-600'}`}>{t.status}</span></p> {/* Highlight status */}
-                <p className="text-sm text-gray-700"><strong>Date:</strong> {new Date(t.created_at).toLocaleString()}</p> {/* Format date */}
+            <div key={t.id} className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg shadow-sm dark:shadow-md mb-4 border border-gray-200 dark:border-gray-600 transition-colors duration-300 text-gray-700 dark:text-gray-300">
+                <p className="text-sm mb-1"><strong>Transaction ID:</strong> {t.id}</p>
+                <p className="text-sm mb-1"><strong>Item:</strong> {t.item.name}</p>
+                <p className="text-sm mb-1"><strong>Quantity:</strong> {t.quantity}</p>
+                <p className="text-sm mb-1"><strong>Total:</strong> ${parseFloat(t.total).toFixed(2)}</p>
+                <p className="text-sm mb-1"><strong>Status:</strong> <span className={`font-semibold ${t.status === 'paid' ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>{t.status}</span></p>
+                <p className="text-sm"><strong>Date:</strong> {new Date(t.created_at).toLocaleString()}</p>
             </div>
          ))
       ) : (
-        <p className="text-gray-600">No transactions found yet.</p>
+        <p className="text-gray-600 dark:text-gray-300 text-center">No transactions found yet.</p>
       )}
     </div>
   );

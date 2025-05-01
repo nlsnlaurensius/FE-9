@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { getAllItems, createTransaction, payTransaction } from '../api';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 
 function ItemsPage() {
   const [items, setItems] = useState([]);
   const [message, setMessage] = useState('');
-  const [messageType, setMessageType] = useState(''); 
+  const [messageType, setMessageType] = useState('');
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
     if (!user || !user.id) {
-        setMessage('User not logged in. Redirecting...');
-        setMessageType('error');
-        navigate('/');
-        return;
+      setMessage('User not logged in. Redirecting...');
+      setMessageType('error');
+      navigate('/login');
+      return;
     }
 
     const fetchItems = async () => {
@@ -31,89 +31,101 @@ function ItemsPage() {
         console.error("API Error:", error.response || error);
         setMessage(errorMessage);
         setMessageType('error');
+        if (error.response && error.response.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          navigate('/login');
+        }
       }
     };
     fetchItems();
-  }, [navigate, user]); 
+  }, [navigate, user]);
 
   const handleBuyItem = async (item) => {
     setMessage('');
     setMessageType('');
-    const quantity = 1; 
+    const quantity = 1;
 
     if (!user || !user.id) {
-        setMessage('User not logged in. Please log in to purchase.');
-        setMessageType('error');
-        navigate('/');
-        return;
+      setMessage('User not logged in. Please log in to purchase.');
+      setMessageType('error');
+      navigate('/login');
+      return;
     }
     const user_id = user.id;
 
     if (item.stock < quantity) {
-         setMessage('Insufficient stock for this item.');
-         setMessageType('error');
-         return;
+      setMessage('Insufficient stock for this item.');
+      setMessageType('error');
+      return;
     }
 
     try {
-        const createResponse = await createTransaction({ item_id: item.id, quantity, user_id });
-        if (!createResponse.data.success) {
-            setMessage(createResponse.data.message);
-            setMessageType('error');
-            return;
-        }
-        const transactionId = createResponse.data.payload.id;
+      const createResponse = await createTransaction({ item_id: item.id, quantity, user_id });
+      if (!createResponse.data.success) {
+          setMessage(createResponse.data.message);
+          setMessageType('error');
+          return;
+      }
+      const transactionId = createResponse.data.payload.id;
 
-        const payResponse = await payTransaction(transactionId);
+      const payResponse = await payTransaction(transactionId);
 
-        if (payResponse.data.success) {
-            setMessage('Purchase successful!');
-            setMessageType('success');
-            const response = await getAllItems();
-            if (response.data.success) {
-                setItems(response.data.payload);
-            }
-        } else {
-             setMessage(payResponse.data.message);
-             setMessageType('error');
-        }
+      if (payResponse.data.success) {
+          setMessage('Purchase successful!');
+          setMessageType('success');
+          const response = await getAllItems();
+          if (response.data.success) {
+              setItems(response.data.payload);
+          }
+      } else {
+          setMessage(payResponse.data.message);
+          setMessageType('error');
+      }
 
     } catch (error) {
-        const errorMessage = error.response?.data?.message || 'Error during purchase. Please try again.';
-        console.error("API Error:", error.response || error);
-        setMessage(errorMessage);
-        setMessageType('error');
+      const errorMessage = error.response?.data?.message || 'Error during purchase. Please try again.';
+      console.error("API Error:", error.response || error);
+      setMessage(errorMessage);
+      setMessageType('error');
+      if (error.response && error.response.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          navigate('/login');
+        }
     }
   };
 
-
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6">Available Items</h2>
-      {message && <p className={`mb-4 ${messageType === 'success' ? 'text-green-500' : 'text-red-500'}`}>{message}</p>}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"> {/* Grid layout dengan Tailwind */}
+      <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Available Items</h2>
+      {message && <p className={`mb-4 ${messageType === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{message}</p>}
+
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10">
         {items.length > 0 ? (
           items.map(item => (
-            <div key={item.id} className="bg-white p-4 rounded-lg shadow-md flex flex-col items-center text-center"> {/* Item Card Styling */}
+            <div key={item.id} className="bg-white rounded-lg shadow-md flex flex-col dark:bg-gray-700 dark:shadow-lg transition-colors duration-300 overflow-hidden">
+  
+            <div className="w-full aspect-video overflow-hidden">
               {item.image_url ? (
-                <img src={item.image_url} alt={item.name} className="w-full h-32 object-cover rounded-md mb-3" />
+                <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
               ) : (
-                 <div className="w-full h-32 bg-gray-200 flex justify-center items-center rounded-md mb-3 text-gray-500">No Image</div>
+                <div className="w-full h-full bg-gray-200 flex justify-center items-center text-gray-500 dark:bg-gray-600 dark:text-gray-400">Tidak Ada Gambar</div>
               )}
-              <h3 className="text-lg font-semibold mb-1">{item.name}</h3>
-              <p className="text-gray-600 text-sm mb-2">Price: ${item.price}</p>
-              <p className={`text-sm ${item.stock > 0 ? 'text-gray-600' : 'text-red-500'} mb-4`}>Stock: {item.stock}</p>
-              <button
-                onClick={() => handleBuyItem(item)}
-                disabled={item.stock <= 0}
-                className="mt-auto bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                {item.stock > 0 ? 'Buy' : 'Out of Stock'}
-              </button>
             </div>
+          
+            <div className="w-full p-4 flex flex-col text-left flex-1">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white">{item.name}</h3>
+                <p className="text-gray-600 text-sm dark:text-gray-300">Harga: ${item.price}</p>
+                <p className={`text-sm ${item.stock > 0 ? 'text-gray-600 dark:text-gray-300' : 'text-red-600 dark:text-red-400'}`}>Stok: {item.stock}</p>
+              </div>
+            </div>
+          
+          </div>
           ))
         ) : (
-          <p>No items found.</p>
+          <p className="text-gray-600 dark:text-gray-300 col-span-full text-center">No items found.</p>
         )}
       </div>
     </div>
